@@ -13,41 +13,35 @@ type mem struct {
 
 // New creates new memory execution object.
 func New(b []byte) (*mem, error) {
-	t, err := ioutil.TempFile("", "go-memexec-")
+	f, err := ioutil.TempFile("", "go-memexec-")
 	if err != nil {
-		return nil, err
-	}
-
-	if _, err = t.Write(b); err != nil {
-		t.Close()
-		os.Remove(t.Name())
 		return nil, err
 	}
 
 	// we need only read and execution privileges
 	// ioutil.TempFile creates files with 0600 perms
-	if err = os.Chmod(t.Name(), 0500); err != nil {
-		t.Close()
-		os.Remove(t.Name())
+	if err = os.Chmod(f.Name(), 0500); err != nil {
+		f.Close()
+		os.Remove(f.Name())
 		return nil, err
 	}
 
-	// binary file has to be closed otherwise
-	// we'll get the "text file busy" error
-	if err = t.Close(); err != nil {
-		os.Remove(t.Name())
+	f, err = write(f, b)
+	if err != nil {
+		f.Close()
+		os.Remove(f.Name())
 		return nil, err
 	}
 
-	return &mem{f: t}, nil
+	return &mem{f: f}, nil
 }
 
 // Command is an equivalent of exec.Command except name must be omitted.
 func (m *mem) Command(arg ...string) *exec.Cmd {
-	return exec.Command(m.f.Name(), arg...)
+	return exec.Command(path(m), arg...)
 }
 
 // Close removes underlying file.
 func (m *mem) Close() error {
-	return os.Remove(m.f.Name())
+	return close(m)
 }
