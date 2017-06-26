@@ -6,13 +6,13 @@ import (
 	"os/exec"
 )
 
-// Mem is in-memory executable code unit.
-type Mem struct {
+// mem is in-memory executable code unit.
+type mem struct {
 	f *os.File
 }
 
 // New creates new memory execution object.
-func New(b []byte) (*Mem, error) {
+func New(b []byte) (*mem, error) {
 	t, err := ioutil.TempFile("", "go-memexec-")
 	if err != nil {
 		return nil, err
@@ -39,15 +39,15 @@ func New(b []byte) (*Mem, error) {
 		return nil, err
 	}
 
-	return &Mem{f: t}, nil
+	return &mem{f: t}, nil
 }
 
 // Command is an equivalent of exec.Command except name must be omitted.
-func (m *Mem) Command(arg ...string) *exec.Cmd {
+func (m *mem) Command(arg ...string) *exec.Cmd {
 	return exec.Command(m.f.Name(), arg...)
 }
 
 // Close removes underlying file.
-func (m *Mem) Close() error {
+func (m *mem) Close() error {
 	return os.Remove(m.f.Name())
 }

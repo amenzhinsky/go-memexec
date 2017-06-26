@@ -13,6 +13,8 @@ func RubyExec(file string) (b []byte, err error) {
 		return
 	}
 
+	// m can be cached to avoid extra copying
+	// when it's needed to call it multiple times
 	m, err := memexec.New(b)
 	if err != nil {
 		return
