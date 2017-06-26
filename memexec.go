@@ -6,27 +6,19 @@ import (
 	"os/exec"
 )
 
-// Cmd is a program prepared to run.
-// Equivalent of *exec.Cmd except the need of closing it.
-type Cmd struct {
-	*exec.Cmd
+// Mem is in-memory executable code unit.
+type Mem struct {
+	f *os.File
 }
 
-// Close removes temporary file.
-func (cmd *Cmd) Close() error {
-	return os.Remove(cmd.Path)
-}
-
-// TODO: consider using syscall.Mmap or fexecve on unix
-// Command returns a Cmd struct prepared to run, like exec.Command.
-// It's clients responsibility to close it.
-func Command(code []byte, argv ...string) (*Cmd, error) {
+// New creates new memory execution object.
+func New(b []byte) (*Mem, error) {
 	t, err := ioutil.TempFile("", "go-memexec-")
 	if err != nil {
 		return nil, err
 	}
 
-	if _, err = t.Write(code); err != nil {
+	if _, err = t.Write(b); err != nil {
 		t.Close()
 		os.Remove(t.Name())
 		return nil, err
@@ -47,5 +39,15 @@ func Command(code []byte, argv ...string) (*Cmd, error) {
 		return nil, err
 	}
 
-	return &Cmd{exec.Command(t.Name(), argv...)}, nil
+	return &Mem{f: t}, nil
+}
+
+// Command is an equivalent of exec.Command except name must be omitted.
+func (m *Mem) Command(arg ...string) *exec.Cmd {
+	return exec.Command(m.f.Name(), arg...)
+}
+
+// Close removes underlying file.
+func (m *Mem) Close() error {
+	return os.Remove(m.f.Name())
 }

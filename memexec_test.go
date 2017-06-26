@@ -19,17 +19,18 @@ func TestMemexec(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cmd, err := Command(b, "foo", "bar")
+	m, err := New(b)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer func() {
-		if err = cmd.Close(); err != nil {
+		if err = m.Close(); err != nil {
 			t.Fatal(err)
 		}
 	}()
 
-	o, err := cmd.Output()
+	c := m.Command("foo", "bar")
+	o, err := c.Output()
 	if err != nil {
 		t.Fatal(err)
 	}

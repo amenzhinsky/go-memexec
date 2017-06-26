@@ -12,19 +12,18 @@ func RubyExec(file string) (b []byte, err error) {
 	if err != nil {
 		return
 	}
-	
-	cmd, err := memexec.Command(b, file)
+
+	m, err := memexec.New(b)
 	if err != nil {
 		return
 	}
 	defer func() {
-		cerr := cmd.Close() 
+		cerr := m.Close() 
 		if err == nil {
 			err = cerr
 		}
-	}() // important!
-	
-	// cmd embeds *exec.Cmd so you can operate it the same way
-	return cmd.Output()
+	}()
+
+	return m.Command(file).Output()
 }
 ```
