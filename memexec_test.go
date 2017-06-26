@@ -24,6 +24,10 @@ func TestMemexec(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer func() {
+		if err != nil {
+			return
+		}
+
 		if err = m.Close(); err != nil {
 			t.Fatal(err)
 		}
