@@ -21,31 +21,31 @@ func (cmd *Cmd) Close() error {
 // Command returns a Cmd struct prepared to run, like exec.Command.
 // It's clients responsibility to close it.
 func Command(code []byte, argv ...string) (*Cmd, error) {
-	f, err := ioutil.TempFile("", "go-memexec-")
+	t, err := ioutil.TempFile("", "go-memexec-")
 	if err != nil {
 		return nil, err
 	}
 
-	if _, err = f.Write(code); err != nil {
-		f.Close()
-		os.Remove(f.Name())
+	if _, err = t.Write(code); err != nil {
+		t.Close()
+		os.Remove(t.Name())
 		return nil, err
 	}
 
 	// we need only read and execution privileges
 	// ioutil.TempFile creates files with 0600 perms
-	if err = os.Chmod(f.Name(), 0500); err != nil {
-		f.Close()
-		os.Remove(f.Name())
+	if err = os.Chmod(t.Name(), 0500); err != nil {
+		t.Close()
+		os.Remove(t.Name())
 		return nil, err
 	}
 
 	// binary file has to be closed otherwise
 	// we'll get the "text file busy" error
-	if err = f.Close(); err != nil {
-		os.Remove(f.Name())
+	if err = t.Close(); err != nil {
+		os.Remove(t.Name())
 		return nil, err
 	}
 
-	return &Cmd{exec.Command(f.Name(), argv...)}, nil
+	return &Cmd{exec.Command(t.Name(), argv...)}, nil
 }
