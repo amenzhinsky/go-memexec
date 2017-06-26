@@ -26,14 +26,15 @@ func Command(code []byte, argv ...string) (*Cmd, error) {
 		return nil, err
 	}
 
-	// we need execution privileges
-	if err = os.Chmod(f.Name(), 0700); err != nil {
+	if _, err = f.Write(code); err != nil {
 		f.Close()
 		os.Remove(f.Name())
 		return nil, err
 	}
 
-	if _, err = f.Write(code); err != nil {
+	// we need only read and execution privileges
+	// ioutil.TempFile creates files with 0600 perms
+	if err = os.Chmod(f.Name(), 0500); err != nil {
 		f.Close()
 		os.Remove(f.Name())
 		return nil, err
