@@ -1,20 +1,21 @@
-# go-memexec
+# go-memexec [![CircleCI](https://circleci.com/gh/amenzhinsky/go-memexec.svg?style=svg)](https://circleci.com/gh/amenzhinsky/go-memexec)
 
 Small library that executes code from memory.
 
 ## Usage
 
-Let's say need to embed ruby interpreter (or any other binary) into your code using tools like `go-bindata` and have ability to execute it:
+Let's say you have ruby binary embedded into you code by [go-bindata](https://github.com/jteeuwen/go-bindata) and you need to have ability to use it:
 
 ```go
-func RubyExec(file string) (b []byte, err error) {
+func RubyExec(argv ...string) (b []byte, err error) {
+	// Asset function provided by go-bindata
 	b, err := Asset("/bin/ruby")
 	if err != nil {
 		return
 	}
 
 	// m can be cached to avoid extra copying
-	// when it's needed to call it multiple times
+	// when it's needed exec the same code multiple times
 	m, err := memexec.New(b)
 	if err != nil {
 		return
@@ -26,6 +27,6 @@ func RubyExec(file string) (b []byte, err error) {
 		}
 	}()
 
-	return m.Command(file).Output()
+	return m.Command(argv...).Output()
 }
 ```
