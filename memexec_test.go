@@ -3,6 +3,7 @@ package memexec
 import (
 	"io/ioutil"
 	"os/exec"
+	"strings"
 	"testing"
 )
 
@@ -33,13 +34,20 @@ func TestMemexec(t *testing.T) {
 		}
 	}()
 
-	c := m.Command("foo", "bar")
-	o, err := c.Output()
-	if err != nil {
-		t.Fatal(err)
-	}
+	for want, args := range map[string][]string{
+		"foo bar": {"-n", "foo", "bar"},
+		"foo baz": {"-n", "foo", "baz"},
+	} {
+		t.Run(strings.Join(args, " "), func(t *testing.T) {
+			c := m.Command(args...)
+			o, err := c.Output()
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	if string(o) != "foo bar\n" {
-		t.Errorf("output = %q, want %q", string(o), "foo bar\n")
+			if string(o) != want {
+				t.Errorf("Command(%#v...): output = %q, want %q", args, string(o), want)
+			}
+		})
 	}
 }
