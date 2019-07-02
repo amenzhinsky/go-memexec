@@ -6,52 +6,54 @@ import (
 	"os/exec"
 )
 
-// mem is in-memory executable code unit.
-type mem struct {
-	f *os.File
+// Exec is an in-memory executable code unit.
+type Exec struct {
+	executor
 }
 
 // New creates new memory execution object that can be
 // used for executing commands on a memory based binary.
-func New(b []byte) (*mem, error) {
+func New(b []byte) (*Exec, error) {
 	f, err := ioutil.TempFile("", "go-memexec-")
 	if err != nil {
 		return nil, err
 	}
-
-	// close and remove the temporary file
-	// if something goes wrong, we need a reference
-	// because f can be overwritten
-	defer func(f *os.File) {
-		if f != nil && err != nil {
-			f.Close()
-			os.Remove(f.Name())
+	defer func() {
+		if err != nil {
+			_ = f.Close()
+			_ = os.Remove(f.Name())
 		}
-	}(f)
+	}()
 
 	// we need only read and execution privileges
 	// ioutil.TempFile creates files with 0600 perms
 	if err = os.Chmod(f.Name(), 0500); err != nil {
 		return nil, err
 	}
-
-	f, err = write(f, b)
-	if err != nil {
+	if _, err := f.Write(b); err != nil {
 		return nil, err
 	}
 
-	return &mem{f: f}, nil
+	var exe Exec
+	if err = exe.prepare(f); err != nil {
+		return nil, err
+	}
+	if err = f.Close(); err != nil {
+		return nil, err
+	}
+	return &exe, nil
 }
 
-// Command is an equivalent of exec.Command except that path
-// to binary must be omitted.
-func (m *mem) Command(arg ...string) *exec.Cmd {
-	return exec.Command(path(m), arg...)
+// Command is an equivalent of `exec.Command`,
+// except that the path to the executable is be omitted.
+func (m *Exec) Command(arg ...string) *exec.Cmd {
+	return exec.Command(m.path(), arg...)
 }
 
-// Close closes mem object.
+// Close closes Exec object.
+//
 // Any further command will fail, it's client's responsibility
 // to control the flow by using synchronization algorithms.
-func (m *mem) Close() error {
-	return close(m)
+func (m *Exec) Close() error {
+	return m.close()
 }

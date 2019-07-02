@@ -1,32 +1,24 @@
 # go-memexec [![CircleCI](https://circleci.com/gh/amenzhinsky/go-memexec.svg?style=svg)](https://circleci.com/gh/amenzhinsky/go-memexec)
 
-Small library that executes code from memory.
+Small library that executes code from the memory.
 
 ## Usage
 
-Let's say you have ruby binary embedded into you code by [go-bindata](https://github.com/jteeuwen/go-bindata) and you need to have ability to use it:
+The following example executes ruby executable embedded into the binary: 
 
 ```go
-func RubyExec(argv ...string) (b []byte, err error) {
-	// Asset function provided by go-bindata
-	b, err := Asset("/bin/ruby")
-	if err != nil {
-		return
-	}
-
-	// m can be cached to avoid extra copying
-	// when it's needed exec the same code multiple times
-	m, err := memexec.New(b)
-	if err != nil {
-		return
-	}
-	defer func() {
-		cerr := m.Close() 
-		if err == nil {
-			err = cerr
-		}
-	}()
-
-	return m.Command(argv...).Output()
+// Asset function provided by a library such as go-bindata
+b, err := Asset("/bin/ruby")
+if err != nil {
+	return err
 }
+
+exe, err := memexec.New(b)
+if err != nil {
+	return err
+}
+defer exe.Close()
+
+cmd := exe.Command(argv...)
+cmd.Output() // cmd is a `*exec.Cmd` from the standard library
 ```

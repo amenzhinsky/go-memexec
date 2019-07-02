@@ -7,44 +7,43 @@ import (
 	"os"
 )
 
-// on linux we can keep a read only fd of the temp file and remove
+type executor struct {
+	f *os.File
+}
+
+// on linux we can keep a read only fd of the temp file and remove it,
 // kernel buffers its content in memory until all fds are closed.
-func write(t *os.File, b []byte) (f *os.File, err error) {
-	f, err = os.OpenFile(t.Name(), os.O_RDONLY, 0500)
+func (e *executor) prepare(t *os.File) error {
+	f, err := os.OpenFile(t.Name(), os.O_RDONLY, 0)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer func() {
 		if err != nil {
-			f.Close()
+			_ = f.Close()
 		}
 	}()
 
 	// check if /proc is mounted
-	p := fmt.Sprintf("/proc/self/fd/%d", int(f.Fd()))
-	if _, err := os.Lstat(p); err != nil {
+	path := fmt.Sprintf("/proc/self/fd/%d", int(f.Fd()))
+	if _, err := os.Lstat(path); err != nil {
 		if os.IsNotExist(err) {
-			err = fmt.Errorf("%s dosn't exist, probably /proc is not mounted", p)
+			return fmt.Errorf("%s dosn't exist, probably /proc is not mounted", path)
 		}
-		return nil, err
+		return err
 	}
-
-	// write code, remove and close the original temporary file
-	// otherwise  we'll get the "text file busy" error
-	if _, err = t.Write(b); err != nil {
-		return nil, err
-	}
-
 	if err = os.Remove(t.Name()); err != nil {
-		return nil, err
+		return err
 	}
-	return f, t.Close()
+
+	e.f = f
+	return nil
 }
 
-func path(m *mem) string {
-	return fmt.Sprintf("/proc/self/fd/%d", int(m.f.Fd()))
+func (e *executor) path() string {
+	return fmt.Sprintf("/proc/self/fd/%d", int(e.f.Fd()))
 }
 
-func close(m *mem) error {
-	return m.f.Close()
+func (e *executor) close() error {
+	return e.f.Close()
 }
