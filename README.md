@@ -1,4 +1,4 @@
-# go-memexec [![CircleCI](https://circleci.com/gh/amenzhinsky/go-memexec.svg?style=svg)](https://circleci.com/gh/amenzhinsky/go-memexec)
+# go-memexec
 
 Small library that executes code from the memory.
 
