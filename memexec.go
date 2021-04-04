@@ -14,7 +14,7 @@ type Exec struct {
 // New creates new memory execution object that can be
 // used for executing commands on a memory based binary.
 func New(b []byte) (*Exec, error) {
-	f, err := ioutil.TempFile("", "go-memexec-")
+	f, err := ioutil.TempFile("", tempPattern)
 	if err != nil {
 		return nil, err
 	}
