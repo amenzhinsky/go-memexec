@@ -27,7 +27,7 @@ func New(b []byte) (*Exec, error) {
 
 	// we need only read and execution privileges
 	// ioutil.TempFile creates files with 0600 perms
-	if err = os.Chmod(f.Name(), 0500); err != nil {
+	if err = os.Chmod(f.Name(), 0o500); err != nil {
 		return nil, err
 	}
 	if _, err := f.Write(b); err != nil {

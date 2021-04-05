@@ -3,8 +3,8 @@ package memexec
 import (
 	"io/ioutil"
 	"os/exec"
-	"testing"
 	"strings"
+	"testing"
 )
 
 func TestCommand(t *testing.T) {
