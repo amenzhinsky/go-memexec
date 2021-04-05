@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os/exec"
 	"testing"
+	"strings"
 )
 
 func TestCommand(t *testing.T) {
@@ -14,13 +15,13 @@ func TestCommand(t *testing.T) {
 		}
 	}()
 
-	c := exe.Command("-n", "test")
+	c := exe.Command("test")
 	o, err := c.Output()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(o) != "test" {
-		t.Errorf("command output = %q, want %q", string(o), "test")
+	if strings.Contains(string(o), "test") {
+		t.Errorf("command output = %q doesn't contain %q", string(o), "test")
 	}
 }
 
@@ -28,7 +29,7 @@ func BenchmarkCommand(b *testing.B) {
 	exe := newEchoExec(b)
 	defer exe.Close()
 	for i := 0; i < b.N; i++ {
-		cmd := exe.Command("-n", "test")
+		cmd := exe.Command("test")
 		if _, err := cmd.Output(); err != nil {
 			b.Fatal(err)
 		}
