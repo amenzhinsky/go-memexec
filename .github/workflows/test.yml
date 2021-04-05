@@ -2,9 +2,10 @@ name: Test and Lint
 on:
   push:
     branches:
-      - actions
       - master
-  workflow_dispatch:
+  pull_request:
+    branches:
+      - master
 
 jobs:
   test:
@@ -17,7 +18,7 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: '^1.16'
-      - name: Run go test
+      - name: Test
         run: go test -v ./...
 
   lint:
@@ -26,7 +27,7 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v2
-      - name: Run golangci-lint
+      - name: Lint
         uses: golangci/golangci-lint-action@v2
         with:
           version: v1.39
