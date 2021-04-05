@@ -20,7 +20,7 @@ func TestCommand(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(string(o), "test") {
+	if !strings.Contains(string(o), "test") {
 		t.Errorf("command output = %q doesn't contain %q", string(o), "test")
 	}
 }
