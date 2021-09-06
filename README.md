@@ -4,16 +4,15 @@ Small library that executes code from the memory.
 
 ## Usage
 
-The following example executes ruby executable embedded into the binary: 
+The following example executes executable embedded into the binary: 
 
 ```go
-// Asset function provided by a library such as go-bindata
-b, err := Asset("/bin/ruby")
-if err != nil {
-	return err
-}
+import _ "embed"
 
-exe, err := memexec.New(b)
+// go:embed path-to-binary
+var mybinary []byte
+
+exe, err := memexec.New(mybinary)
 if err != nil {
 	return err
 }

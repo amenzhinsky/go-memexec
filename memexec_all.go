@@ -1,22 +1,39 @@
-//+build !linux
+//go:build !linux
 
 package memexec
 
-import "os"
+import (
+	"io/ioutil"
+	"os"
+	"runtime"
+)
 
-type executor struct {
-	f *os.File
+func open(b []byte) (*os.File, error) {
+	pattern := "go-memexec-"
+	if runtime.GOOS == "windows" {
+		pattern = "go-memexec-*.exe"
+	}
+	f, err := ioutil.TempFile("", pattern)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err != nil {
+			_ = clean(f)
+		}
+	}()
+	if err = os.Chmod(f.Name(), 0o500); err != nil {
+		return nil, err
+	}
+	if _, err = f.Write(b); err != nil {
+		return nil, err
+	}
+	if err = f.Close(); err != nil {
+		return nil, err
+	}
+	return f, nil
 }
 
-func (e *executor) prepare(t *os.File) error {
-	e.f = t
-	return nil
-}
-
-func (e *executor) path() string {
-	return e.f.Name()
-}
-
-func (e *executor) close() error {
-	return os.Remove(e.f.Name())
+func clean(f *os.File) error {
+	return os.Remove(f.Name())
 }
