@@ -1,6 +1,7 @@
 package memexec
 
 import (
+	"context"
 	"os"
 	"os/exec"
 )
@@ -21,9 +22,15 @@ func New(b []byte) (*Exec, error) {
 }
 
 // Command is an equivalent of `exec.Command`,
-// except that the path to the executable is be omitted.
+// except that the path to the executable is being omitted.
 func (m *Exec) Command(arg ...string) *exec.Cmd {
 	return exec.Command(m.f.Name(), arg...)
+}
+
+// CommandContext is an equivalent of `exec.CommandContext`,
+// except that the path to the executable is being omitted.
+func (m *Exec) CommandContext(ctx context.Context, arg ...string) *exec.Cmd {
+	return exec.CommandContext(ctx, m.f.Name(), arg...)
 }
 
 // Close closes Exec object.
