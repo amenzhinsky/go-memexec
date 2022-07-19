@@ -41,13 +41,21 @@ func TestCommandContext(t *testing.T) {
 	c := exe.CommandContext(ctx, "1")
 
 	start := time.Now()
-	go c.Run()
-	c.Wait()
+	err := c.Start()
+	if err != nil {
+		t.Fatalf("start failed: %s", err)
+	}
+	err = c.Wait()
+	if err != nil {
+		if err.Error() != "signal: killed" {
+			t.Fatalf("command execution failed: %s", err)
+		}
+	}
 	stop := time.Now()
 	delta := stop.Sub(start)
 
 	if delta > time.Millisecond*600 || delta < time.Millisecond*500 {
-		t.Errorf("unexpected command execution time, delta=%s", delta)
+		t.Fatalf("unexpected command execution time: delta=%s", delta)
 	}
 }
 
