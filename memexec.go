@@ -23,14 +23,14 @@ func New(b []byte) (*Exec, error) {
 
 // Command is an equivalent of `exec.Command`,
 // except that the path to the executable is being omitted.
-func (m *Exec) Command(arg ...string) *exec.Cmd {
-	return exec.Command(m.f.Name(), arg...)
+func (m *Exec) Command(args ...string) *exec.Cmd {
+	return exec.Command(m.f.Name(), args...)
 }
 
 // CommandContext is an equivalent of `exec.CommandContext`,
 // except that the path to the executable is being omitted.
-func (m *Exec) CommandContext(ctx context.Context, arg ...string) *exec.Cmd {
-	return exec.CommandContext(ctx, m.f.Name(), arg...)
+func (m *Exec) CommandContext(ctx context.Context, args ...string) *exec.Cmd {
+	return exec.CommandContext(ctx, m.f.Name(), args...)
 }
 
 // Close closes Exec object.
