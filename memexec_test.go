@@ -1,10 +1,12 @@
 package memexec
 
 import (
+	"context"
 	"io/ioutil"
 	"os/exec"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestCommand(t *testing.T) {
@@ -25,6 +27,38 @@ func TestCommand(t *testing.T) {
 	}
 }
 
+func TestCommandContext(t *testing.T) {
+	exe := newSleepExec(t)
+	defer func() {
+		if err := exe.Close(); err != nil {
+			t.Fatalf("close error: %s", err)
+		}
+	}()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*500)
+	defer cancel()
+
+	c := exe.CommandContext(ctx, "1")
+
+	start := time.Now()
+	err := c.Start()
+	if err != nil {
+		t.Fatalf("start failed: %s", err)
+	}
+	err = c.Wait()
+	if err != nil {
+		if err.Error() != "signal: killed" {
+			t.Fatalf("command execution failed: %s", err)
+		}
+	}
+	stop := time.Now()
+	delta := stop.Sub(start)
+
+	if delta > time.Millisecond*600 || delta < time.Millisecond*500 {
+		t.Fatalf("unexpected command execution time: delta=%s", delta)
+	}
+}
+
 func BenchmarkCommand(b *testing.B) {
 	exe := newEchoExec(b)
 	defer exe.Close()
@@ -36,10 +70,8 @@ func BenchmarkCommand(b *testing.B) {
 	}
 }
 
-func newEchoExec(t testing.TB) *Exec {
-	// lookup echo binary that is provided on all unix systems
-	// and it's not a built-in opposed to `ls` and `type`
-	path, err := exec.LookPath("echo")
+func newExec(name string, t testing.TB) *Exec {
+	path, err := exec.LookPath(name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,4 +85,14 @@ func newEchoExec(t testing.TB) *Exec {
 		t.Fatal(err)
 	}
 	return exe
+}
+
+func newEchoExec(t testing.TB) *Exec {
+	// lookup echo binary that is provided on all unix systems
+	// and it's not a built-in opposed to `ls` and `type`
+	return newExec("echo", t)
+}
+
+func newSleepExec(t testing.TB) *Exec {
+	return newExec("sleep", t)
 }
