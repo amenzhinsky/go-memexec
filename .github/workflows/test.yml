@@ -36,5 +36,5 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.47.1
-          args: --enable=gofumpt,goimports,whitespace,gocritic,exportloopref,unconvert,ifshort,prealloc
+          version: v1.48.0
+          args: --enable=gofumpt,goimports,whitespace,gocritic,exportloopref,unconvert,prealloc

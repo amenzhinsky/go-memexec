@@ -2,7 +2,7 @@ package memexec
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -76,7 +76,7 @@ func newExec(name string, t testing.TB) *Exec {
 	if err != nil {
 		t.Fatal(err)
 	}
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}

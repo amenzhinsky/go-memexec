@@ -4,7 +4,6 @@
 package memexec
 
 import (
-	"io/ioutil"
 	"os"
 	"runtime"
 )
@@ -14,7 +13,7 @@ func open(b []byte) (*os.File, error) {
 	if runtime.GOOS == "windows" {
 		pattern = "go-memexec-*.exe"
 	}
-	f, err := ioutil.TempFile("", pattern)
+	f, err := os.CreateTemp("", pattern)
 	if err != nil {
 		return nil, err
 	}
