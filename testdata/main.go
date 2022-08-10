@@ -4,15 +4,17 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/amenzhinsky/go-memexec/testdata/python3"
+	"github.com/amenzhinsky/go-memexec/testdata/perl"
 )
 
 func main() {
-	exe, err := python3.New()
+	exe, err := perl.New()
 	if err != nil {
 		panic(err)
 	}
-	b, err := exe.Command(os.Args[1:]...).CombinedOutput()
+	c := exe.Command()
+	c.Stdin = os.Stdin
+	b, err := c.CombinedOutput()
 	if err != nil {
 		panic(err)
 	}

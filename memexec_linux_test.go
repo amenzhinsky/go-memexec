@@ -4,24 +4,27 @@
 package memexec
 
 import (
+	"bytes"
 	"os/exec"
-	"strings"
 	"testing"
 )
 
 func TestGenerateDynLink(t *testing.T) {
-	_ = execute(t, "go", "run", "../cmd/memexec-gen", "/usr/bin/python3")
-	if have := execute(t, "go", "run", ".", "-c", "print(42)"); have != "42" {
-		t.Fatalf("output mismatch:\n\thave: %s\n\twant: %s", have, "42")
-	}
-}
-
-func execute(t *testing.T, cmd string, args ...string) string {
-	exe := exec.Command(cmd, args...)
-	exe.Dir = "testdata"
-	b, err := exe.CombinedOutput()
+	e := exec.Command("go", "run", "../cmd/memexec-gen", "/usr/bin/perl")
+	e.Dir = "testdata"
+	b, err := e.CombinedOutput()
 	if err != nil {
 		t.Fatal(err)
 	}
-	return strings.TrimSpace(string(b))
+
+	e = exec.Command("go", "run", ".")
+	e.Dir = "testdata"
+	e.Stdin = bytes.NewBufferString("print 42")
+	b, err = e.CombinedOutput()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if have := string(b); have != "42" {
+		t.Fatalf("output mismatch:\n\thave: %s\n\twant: %s", have, "42")
+	}
 }
