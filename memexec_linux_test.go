@@ -14,7 +14,7 @@ func TestGenerateDynLink(t *testing.T) {
 	e.Dir = "testdata"
 	b, err := e.CombinedOutput()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal(outputOrErr(b, err))
 	}
 
 	e = exec.Command("go", "run", ".")
@@ -22,9 +22,16 @@ func TestGenerateDynLink(t *testing.T) {
 	e.Stdin = bytes.NewBufferString("print 42")
 	b, err = e.CombinedOutput()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal(outputOrErr(b, err))
 	}
 	if have := string(b); have != "42" {
 		t.Fatalf("output mismatch:\n\thave: %s\n\twant: %s", have, "42")
 	}
+}
+
+func outputOrErr(b []byte, err error) string {
+	if b != nil {
+		return string(b)
+	}
+	return err.Error()
 }
