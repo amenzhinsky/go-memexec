@@ -19,12 +19,8 @@ func TestCommand(t *testing.T) {
 	}()
 
 	c := exe.Command("test")
-	o, err := c.Output()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !strings.Contains(string(o), "test") {
-		t.Errorf("command output = %q doesn't contain %q", string(o), "test")
+	if have := runCommand(t, c); !strings.HasPrefix(have, "test") {
+		t.Errorf("command output = %q doesn't contain %q", have, "test")
 	}
 }
 
@@ -62,7 +58,12 @@ func TestCommandContext(t *testing.T) {
 
 func BenchmarkCommand(b *testing.B) {
 	exe := newEchoExec(b)
-	defer exe.Close()
+	defer func() {
+		if err := exe.Close(); err != nil {
+			b.Fatalf("close error: %s", err)
+		}
+	}()
+
 	for i := 0; i < b.N; i++ {
 		cmd := exe.Command("test")
 		if _, err := cmd.Output(); err != nil {
@@ -71,7 +72,7 @@ func BenchmarkCommand(b *testing.B) {
 	}
 }
 
-func newExec(name string, t testing.TB) *Exec {
+func newExec(t testing.TB, name string) *Exec {
 	path, err := exec.LookPath(name)
 	if err != nil {
 		t.Fatal(err)
@@ -91,9 +92,21 @@ func newExec(name string, t testing.TB) *Exec {
 func newEchoExec(t testing.TB) *Exec {
 	// lookup echo binary that is provided on all unix systems
 	// and it's not a built-in opposed to `ls` and `type`
-	return newExec("echo", t)
+	return newExec(t, "echo")
 }
 
 func newSleepExec(t testing.TB) *Exec {
-	return newExec("sleep", t)
+	return newExec(t, "sleep")
+}
+
+func runCommand(t *testing.T, cmd *exec.Cmd) string {
+	t.Helper()
+	b, err := cmd.CombinedOutput()
+	if err != nil {
+		if b != nil {
+			t.Fatal(string(b))
+		}
+		t.Fatal(err)
+	}
+	return string(b)
 }

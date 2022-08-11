@@ -32,7 +32,9 @@ cmd.Output() // cmd is a `*exec.Cmd` from the standard library
 
 With dynamic linked binaries things get more complicated, it's needed to embed all dependencies along with the executable.
 
-At the runtime deps are copied to a temp dir and executable receives the corresponding `LD_LIBRARY_PATH` that forces the dynamic linker to use the embedded libraries.
+At the runtime deps are copied to a temp dir and executable receives the corresponding `LD_LIBRARY_PATH` that forces the dynamic linker to use the copied libraries.
+
+The dynamic linker must be the same on both building and running machines since it's not included in the resulting binary (there's no interoperability between musl and GNU systems).
 
 The following script helps generating packages, say `python3`:
 
