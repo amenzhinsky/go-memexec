@@ -30,7 +30,7 @@ cmd.Output() // cmd is a `*exec.Cmd` from the standard library
 
 ## Dynamic Binary (Linux only)
 
-With dynamic linked binaries things get more complicated, we need to embed all dependencies along with the executable.
+With dynamic linked binaries things get more complicated, it's needed to embed all dependencies along with the executable.
 
 At the runtime deps are copied to a temp dir and executable receives the corresponding `LD_LIBRARY_PATH` that forces the dynamic linker to use the embedded libraries.
 
