@@ -1,25 +1,22 @@
 //go:build linux
-// +build linux
 
 package memexec
 
 import (
-	"bytes"
 	"os/exec"
 	"testing"
 )
 
-func TestGenerateDynLink(t *testing.T) {
-	e := exec.Command("go", "run", "../cmd/memexec-gen", "/usr/bin/perl")
+func TestGenLinux(t *testing.T) {
+	e := exec.Command("go", "run", "../cmd/memexec-gen", "/usr/bin/python3")
 	e.Dir = "testdata"
 	b, err := e.CombinedOutput()
 	if err != nil {
 		t.Fatal(outputOrErr(b, err))
 	}
 
-	e = exec.Command("go", "run", ".")
+	e = exec.Command("go", "run", ".", "-c", "print(42)")
 	e.Dir = "testdata"
-	e.Stdin = bytes.NewBufferString("print 42")
 	b, err = e.CombinedOutput()
 	if err != nil {
 		t.Fatal(outputOrErr(b, err))

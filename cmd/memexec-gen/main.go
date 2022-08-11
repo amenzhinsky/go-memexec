@@ -1,3 +1,5 @@
+//go:build linux
+
 package main
 
 import (
@@ -137,7 +139,7 @@ func run(bin string) error {
 	}
 	out("	return memexec.New(", goName(base), ",  append([]memexec.Option{")
 	out("		memexec.WithPrepare(func(exe *exec.Cmd) {")
-	out(`			exe.Env = []string{"LD_LIBRARY_PATH="+temp}`)
+	out(`			exe.Env = append(exe.Env, "LD_LIBRARY_PATH="+temp)`)
 	out("		}),")
 	out("		memexec.WithCleanup(func() error {")
 	out("			return os.RemoveAll(temp)")
@@ -167,7 +169,9 @@ func goName(name string) string {
 	return "memexec_" + name
 }
 
-func ldd(deps map[string]string, name string, look func(name string) (string, error)) error {
+func ldd(
+	deps map[string]string, name string, look func(name string) (string, error),
+) error {
 	path, err := look(name)
 	if err != nil {
 		return err
@@ -181,30 +185,57 @@ func ldd(deps map[string]string, name string, look func(name string) (string, er
 	if err != nil {
 		return err
 	}
+	rpaths, err := e.DynString(elf.DT_RPATH)
+	if err != nil {
+		return err
+	}
+	runpaths, err := e.DynString(elf.DT_RUNPATH)
+	if err != nil {
+		return err
+	}
+	if err := e.Close(); err != nil {
+		return err
+	}
 	for _, lib := range l {
 		if _, ok := deps[lib]; ok {
 			continue
 		}
-		if err := ldd(deps, lib, lookLibrary); err != nil {
+		if err := ldd(deps, lib, func(name string) (string, error) {
+			return lookLibrary(name, rpaths, runpaths)
+		}); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-var libDirs = []string{"/lib", "/usr/lib"}
+var ldPaths = []string{"/lib", "/usr/local/lib", "/usr/lib"}
 
 func init() {
-	if runtime.GOARCH == "amd64" {
-		libDirs = []string{"/lib64", "/usr/lib64"}
+	// TODO: os.ReadFile(fmt.Sprintf("/etc/ld-musl-$(ARCH).path"))
+	switch runtime.GOARCH {
+	case "amd64":
+		ldPaths = append(ldPaths,
+			"/lib64",
+			"/usr/lib64",
+			"/usr/local/lib/x86_64-linux-gnu",
+			"/lib/x86_64-linux-gnu",
+			"/usr/lib/x86_64-linux-gnu",
+		)
+	case "arm64":
+		ldPaths = append(ldPaths,
+			"/usr/local/lib/aarch64-linux-gnu",
+			"/lib/aarch64-linux-gnu",
+			"/usr/lib/aarch64-linux-gnu",
+		)
 	}
 	if s := os.Getenv("LD_LIBRARY_PATH"); s != "" {
-		libDirs = append(libDirs, filepath.SplitList(s)...)
+		ldPaths = append(ldPaths, filepath.SplitList(s)...)
 	}
 }
 
-func lookLibrary(name string) (string, error) {
-	for _, dir := range libDirs {
+func lookLibrary(name string, rpaths, runpaths []string) (string, error) {
+	for _, dir := range append(rpaths, append(ldPaths, runpaths...)...) {
 		path := filepath.Join(dir, name)
 		stat, err := os.Stat(path)
 		if err != nil {
