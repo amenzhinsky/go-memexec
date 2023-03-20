@@ -15,7 +15,7 @@ func open(b []byte) (*os.File, error) {
 	if err != nil {
 		return nil, err
 	}
-	f := os.NewFile(uintptr(fd), fmt.Sprintf("/proc/self/fd/%d", fd))
+	f := os.NewFile(uintptr(fd), fmt.Sprintf("/proc/%d/fd/%d", os.Getpid(), fd))
 	if _, err := f.Write(b); err != nil {
 		_ = f.Close()
 		return nil, err

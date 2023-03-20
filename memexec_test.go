@@ -1,6 +1,7 @@
 package memexec
 
 import (
+	"bytes"
 	"context"
 	"os"
 	"os/exec"
@@ -21,6 +22,26 @@ func TestCommand(t *testing.T) {
 	c := exe.Command("test")
 	if have := runCommand(t, c); !strings.HasPrefix(have, "test") {
 		t.Errorf("command output = %q doesn't contain %q", have, "test")
+	}
+}
+
+func TestCommand_Shell(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		return
+	}
+
+	exe, err := New([]byte("#!/bin/sh\necho hello"))
+	if err != nil {
+		panic(err)
+	}
+	defer exe.Close()
+
+	b, err := exe.Command().CombinedOutput()
+	if err != nil {
+		t.Fatalf("err = %v, output = %q", err, b)
+	}
+	if !bytes.Equal(b, []byte("hello\n")) {
+		t.Fatalf("output = %q, want %q", string(b), []byte("hello\n"))
 	}
 }
 
@@ -104,7 +125,7 @@ func runCommand(t *testing.T, cmd *exec.Cmd) string {
 	b, err := cmd.CombinedOutput()
 	if err != nil {
 		if b != nil {
-			t.Fatal(string(b))
+			t.Fatalf("failed to run: %q", string(b))
 		}
 		t.Fatal(err)
 	}
